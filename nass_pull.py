@@ -17,4 +17,4 @@ rsc = "get_counts"
 data = req.get(f"{base_url}/{rsc}/?key={api_key}&commodity_desc=CORN&year__GE=2012&state_alpha=NE").text
 print(data)
 
-print("testing")
+print("test")
