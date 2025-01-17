@@ -20,3 +20,5 @@ data = req.get(
     f"{base_url}/{rsc}/?key={api_key}&param=county_code&state_alpha={state}"
 ).text
 print(data)
+
+
