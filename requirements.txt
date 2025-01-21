@@ -1,2 +1,8 @@
 polars
 matplotlib
+requests
+os
+dotenv
+json
+alive_progress
+time

@@ -1,5 +1,4 @@
 import polars as pl
-
 # import matplotlib.pyplot as plt
 import requests as req
 import os
@@ -34,7 +33,8 @@ cols_to_include = (
     "CV (%)",
 )
 
-df = pl.read_csv("NASS_pull.csv")
+# df = pl.read_parquet("NASS_pull.parquet")
+df = pl.read_parquet("NASS_pull.parquet")
 df = df.select(cols_to_include)
 print(df)
 
