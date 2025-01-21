@@ -1,7 +1,7 @@
 import polars as pl
 import matplotlib.pyplot as plt
 
-df = pl.read_csv("FedCounties.csv")
+df = pl.read_csv("NASS_pull.csv")
 
 # pt map of counties by fed district
 # for d in df.partition_by("District"):
@@ -11,23 +11,17 @@ df = pl.read_csv("FedCounties.csv")
 # plt.grid()
 # plt.legend()
 # plt.show()
-tuples = []
 
-for dist in range(1, 13):
-    filtered = df.filter(df["District"] == dist)
-    tuples.extend(
-        zip(
-            filtered["District"].to_list(),
-            filtered["STATEFP"].to_list(),
-            filtered["COUNTYFP"].to_list(),
-        )
-    )
+df_totals = df.filter(
+    (pl.col("domain_desc") == "TOTAL")
+    & (pl.col("statisticcat_desc") == "SALES")
+    & (pl.col("unit_desc") == "$")
+)
+print(df_totals)
+df_totals = df_totals.filter(~pl.col("Value").str.contains("(D)"))
+print(
+    (df_totals["Value"].str.replace_all(pattern=",", value="").cast(pl.Int64).sum())
+    / 89400000000
+)
 
-district = 1
-
-j = 0
-for i in tuples:
-    if i[0] == district:
-        j += 1
-
-print(j)
+# tenth district accounts for almost 1/3rd cash val of all cattle sales in the US
