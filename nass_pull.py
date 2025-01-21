@@ -62,4 +62,4 @@ with alive_bar(len(pairs), title="Pairs") as bar:
 
 df = pl.concat(dfs)
 df.write_parquet("NASS_pull.parquet")
-df.write_csv("NASS_pull.csv")
+# df.write_csv("NASS_pull.csv")
