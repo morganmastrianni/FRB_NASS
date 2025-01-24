@@ -54,4 +54,7 @@ print(
     / 89400000000
 )
 
+df_totals = df_totals.with_columns(pl.lit(10).alias("District"))
+print(df_totals)
+
 # tenth district accounts for almost 1/3rd cash val of all cattle sales in the US
