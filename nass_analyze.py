@@ -9,11 +9,6 @@ load_dotenv()
 url = "https://quickstats.nass.usda.gov/api/api_GET"
 api_key = os.getenv("NASS_api_key")
 
-# params = req.get(
-#     f"{url}/get_param_values/?key={api_key}&param=short_desc"
-# )
-# print(params)
-
 cols_to_include = (
     "state_name",
     "state_fips_code",
@@ -30,24 +25,34 @@ cols_to_include = (
     "prodn_practice_desc",
     "util_practice_desc",
     "unit_desc",
+    "District",
     "Value",
     "CV (%)",
 )
+
+# params = req.get(
+#     f"{url}/get_param_values/?key={api_key}&param=short_desc"
+# )
+# print(params)
 
 # df = pl.read_parquet("NASS_pull.parquet")
 df = pl.read_parquet("NASS_pull.parquet")
 df = df.select(cols_to_include)
 print(df)
 
+parameters = {col_name:df[col_name].unique() for col_name in df.columns[1:len(cols_to_include)-2]}
+
+
+
 df_totals = df.filter(
     (pl.col("domain_desc") == "TOTAL")
     & (pl.col("statisticcat_desc") == "SALES")
-    & (pl.col("unit_desc") == "$")
+    & (pl.col("unit_desc") == "HEAD")
     & (pl.col("commodity_desc") == "CATTLE")
 )
 
-df_totals = df_totals.filter(~pl.col("Value").str.contains(r"\(D\)|\(Z\)"))
-print(df_totals)
+# df_totals = df_totals.filter(~pl.col("Value").str.contains(r"\(D\)|\(Z\)"))
+# print(df_totals)
 
 print(
     (df_totals["Value"].str.replace_all(pattern=",", value="").cast(pl.Int64).sum())
