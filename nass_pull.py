@@ -30,7 +30,7 @@ url = "https://quickstats.nass.usda.gov/api/api_GET"
 api_key = os.getenv("NASS_api_key")
 
 district_dfs = []
-with keep.presenting():
+with keep.presenting():  # took approx. 3:29 hrs
     for dist in range(1, 13):
         pairs = [
             (state, county) for district, state, county in tuples if district == dist
