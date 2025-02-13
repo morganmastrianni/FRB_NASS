@@ -1,65 +1,41 @@
 import polars as pl
 
-# import matplotlib.pyplot as plt
-import requests as req
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-url = "https://quickstats.nass.usda.gov/api/api_GET"
-api_key = os.getenv("NASS_api_key")
-
-cols_to_include = (
-    "state_name",
-    "state_fips_code",
-    "county_name",
-    "county_code",
-    "asd_desc",
-    "group_desc",
-    "commodity_desc",
-    "class_desc",
-    "short_desc",
-    "domain_desc",
-    "domaincat_desc",
-    "statisticcat_desc",
-    "prodn_practice_desc",
-    "util_practice_desc",
-    "unit_desc",
-    "District",
-    "Value",
-    "CV (%)",
-)
-
-# params = req.get(
-#     f"{url}/get_param_values/?key={api_key}&param=short_desc"
-# )
-# print(params)
-
-# df = pl.read_parquet("NASS_pull.parquet")
 df = pl.read_parquet("NASS_pull.parquet")
-df = df.select(cols_to_include)
-print(df)
+df = df.filter(~pl.col("Value").str.contains(r"\(D\)|\(Z\)"))
+df = df.with_columns(pl.col("Value").str.replace_all(",", "").cast(pl.Float64))
 
-parameters = {col_name:df[col_name].unique() for col_name in df.columns[1:len(cols_to_include)-2]}
+district_dfs = []
+# j = 0
+for dist in df.partition_by("District"):
+    district_df = dist.group_by("short_desc").agg(
+        [pl.sum("Value").alias("District_Total"), pl.mean("District").cast(pl.Int32)]
+    )
+    # print(district_df["short_desc"].unique().count())
+    # print(len(pl.Series(district_df["District_Totals"])))
+    # j += district_df["short_desc"].unique().count()
+    district_dfs.append(district_df)
 
+df = pl.concat(district_dfs)
+# print(df)
+# print(j)
+# print(len(pl.Series(df["District_Totals"])))
 
+# keyword searching
+keywords = ["acres", "irrigated", "cropland", "harvested"]
+excl_keywords = ["excl", "non"]
+districts = range(1, 13) # or [10, 11, 12]
 
-df_totals = df.filter(
-    (pl.col("domain_desc") == "TOTAL")
-    & (pl.col("statisticcat_desc") == "SALES")
-    & (pl.col("unit_desc") == "HEAD")
-    & (pl.col("commodity_desc") == "CATTLE")
+custom = df.filter(
+    *[
+        pl.col("short_desc").str.to_lowercase().str.contains(k.lower())
+        for k in keywords
+    ],
+    *[
+        ~pl.col("short_desc").str.to_lowercase().str.contains(excl.lower())
+        for excl in excl_keywords
+    ],
+    pl.col("District").is_in(districts),
 )
 
-# df_totals = df_totals.filter(~pl.col("Value").str.contains(r"\(D\)|\(Z\)"))
-# print(df_totals)
-
-print(
-    (df_totals["Value"].str.replace_all(pattern=",", value="").cast(pl.Int64).sum())
-    / 89400000000
-)
-
-df_totals = df_totals.with_columns(pl.lit(10).alias("District"))
-print(df_totals)
-
-# tenth district accounts for almost 1/3rd cash val of all cattle sales in the US
+print(custom.sort("District_Total", descending=True))
+print(custom["short_desc"][0])

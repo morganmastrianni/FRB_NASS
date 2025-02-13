@@ -8,7 +8,9 @@ from time import sleep
 from wakepy import keep
 
 fed_counties_df = pl.read_csv("FedCounties.csv")
-fed_counties_df = fed_counties_df.filter((pl.col("STATEFP") != 78) & (pl.col("STATEFP") != 72)) # excl. PR and U.S. Virgin Islands
+fed_counties_df = fed_counties_df.filter(
+    (pl.col("STATEFP") != 78) & (pl.col("STATEFP") != 72)
+)  # excl. PR and U.S. Virgin Islands
 tuples = []
 
 for dist in range(1, 13):
@@ -30,8 +32,10 @@ api_key = os.getenv("NASS_api_key")
 district_dfs = []
 with keep.presenting():
     for dist in range(1, 13):
-        pairs = [(state, county) for district, state, county in tuples if district == dist]
-        
+        pairs = [
+            (state, county) for district, state, county in tuples if district == dist
+        ]
+
         county_dfs = []
         with alive_bar(len(pairs), title="Pairs") as bar:
             for state, county in pairs:
@@ -62,7 +66,9 @@ with keep.presenting():
                     continue
 
                 county_df = pl.DataFrame(json.loads(raw)["data"])
-                county_df = county_df.select([pl.col(c) for c in sorted(county_df.columns)])
+                county_df = county_df.select(
+                    [pl.col(c) for c in sorted(county_df.columns)]
+                )
                 county_dfs.append(county_df)
 
         district_df = pl.concat(county_dfs)
