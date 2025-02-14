@@ -6,3 +6,6 @@ dotenv
 json
 alive_progress
 time
+wakepy
+polars.selectors
+great_tables
